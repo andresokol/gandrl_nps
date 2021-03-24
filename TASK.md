@@ -40,11 +40,21 @@ arXiv preprint arXiv:1805.04276.
 
 Получите karel_dataset, найдите в нем train.json и разберитесь в его структуре.
 
+
 Вопросы
  - как правильно называется формат файла train.json?
+ > TDB
  - как взять часть из файла train.json?
+ > Поскольку каждая строка - корректный JSON, удобно пользоваться командой `head`
  - подготовьте файлы корректного формата размером 1%, 3%, 10% от оригинала train.json
- 
+ > $$
+ andresokol@andresokol-vla:~/jup/1m_6ex_karel$ wc -l train.json 
+1116854 train.json
+andresokol@andresokol-vla:~/jup/1m_6ex_karel$ head -n 11168 train.json > train_1p.json
+andresokol@andresokol-vla:~/jup/1m_6ex_karel$ head -n 33505 train.json > train_3p.json
+andresokol@andresokol-vla:~/jup/1m_6ex_karel$ head -n 111685 train.json > train_10p.json
+$$
+
 ### Задание 2. 
  
 Напишите код, который загружает данные из train.json
