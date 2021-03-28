@@ -73,10 +73,48 @@ andresokol@andresokol-vla:~/jup/1m_6ex_karel$ head -n 111685 train.json > train_
  - на каком языке реализован?
  > python 2.7
  - что нужно сделать для установки эксперимента и зависимостей?
- > установить библиотеку pytorch, выполнить setup.py
+ > установить библиотеку pytorch, установить cython, выполнить setup.py
  - где должны быть размещены данные?
+ > где угодно, путь к данным передается параметром
  - что нужно сделать для запуска эксперимента, как указать параметры и какие значения выбрать?
+ > Запускал на предложенных авторами параметрах, подправив размер батча под мою видеокарту. Пример команды:
+ ```
+ python train_cmd.py --kernel_size 3 `
+             --conv_stack "64,64,64" `
+             --fc_stack "512" `
+             --tgt_embedding_size 256 `
+             --lstm_hidden_size 256 `
+             --nb_lstm_layers 2 `
+             --signal supervised `
+             --nb_ios 5 `
+             --nb_epochs 10 `
+             --optim_alg Adam `
+             --batch_size 128 `
+             --learning_rate 1e-4 `
+             --train_file C:\Users\andresokol-win\Documents\code\miptap\gandrl_nps\data/1m_6ex_karel/train_1p.json `
+             --val_file C:\Users\andresokol-win\Documents\code\miptap\gandrl_nps\data/1m_6ex_karel/val.json `
+             --vocab C:\Users\andresokol-win\Documents\code\miptap\gandrl_nps\data/1m_6ex_karel/new_vocab.vocab `
+             --result_folder exps/supervised_use_grammar `
+             --use_grammar `
+             --use_cuda
+```
  - что нужно сделать для проверки обученной модели?
+ > запустить команду для проверки, пример:
+```
+
+python eval_cmd.py --model_weights exps/supervised_use_grammar/Weights/weights_1.model `
+            `
+            --vocabulary C:\Users\andresokol-win\Documents\code\miptap\gandrl_nps\data/1m_6ex_karel/new_vocab.vocab `
+            --dataset C:\Users\andresokol-win\Documents\code\miptap\gandrl_nps\data/1m_6ex_karel/val.json `
+            --eval_nb_ios 5 `
+            --eval_batch_size 8 `
+            --output_path exps/supervised_use_grammar/Results/ValidationSet_ `
+            --beam_size 64 `
+            --top_k 10 `
+            --dump_programs `
+            --use_grammar `
+            --use_cuda
+```
  
 ### Задание 2. 
  
@@ -84,8 +122,11 @@ andresokol@andresokol-vla:~/jup/1m_6ex_karel$ head -n 111685 train.json > train_
  
 Вопросы
  - зачем нужны файлы *.thdump в папке датасета?
+ > в thdump лежат подготовленные токенизированные данные, преобразованные из сырого текста 
  - что содержит new_vocab?
+ > 
  - где находится датасет для контроля и для теста?
+ > в файлах val.json и test.json
  - как устроен экземпляр данных для обучения?
 
 ### Задание 3. 
@@ -94,9 +135,13 @@ andresokol@andresokol-vla:~/jup/1m_6ex_karel$ head -n 111685 train.json > train_
 
 Вопросы
  - как указать вид модели?
+ > вид модели задается аргументом к команде
  - какие ошибки возникли при запуске и как вы их устранили?
+ > возникли ошибки, связанные с изменениями апи библиотек и разницей Python 2 -> 3
  - сколько эпох вы провели?
+ > 10
  - где сохранены результаты и логи эксперимента?
+ > путь задается параметром --result_folder 
  - какого качества получен результат?
  
 3а. Оператор m += 1 имеет другое значение, чем m = m + 1. Также воспользуйтесь явным приведением типов

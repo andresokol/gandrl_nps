@@ -145,7 +145,7 @@ class Beam(object):
             bestScores = torch.masked_select(bestScores, to_keep)
             bestScoresId = torch.masked_select(bestScoresId, to_keep)
         # Because we flattened the beam x expandword array, we need to reidentify
-        prevBeam = bestScoresId / numExpandWords
+        prevBeam = bestScoresId // numExpandWords
         next_input = bestScoresId - prevBeam * numExpandWords
         self.scores = bestScores
         self.parent_beam_idxs = prevBeam

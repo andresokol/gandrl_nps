@@ -42,6 +42,9 @@ def evaluate_model(model_weights,
                    batch_size,
                    use_cuda,
                    dump_programs):
+    # if use_cuda:
+    #     torch.cuda.empty_cache()
+
     all_outputs_path = []
     all_semantic_output_path = []
     all_syntax_output_path = []

@@ -228,6 +228,7 @@ def train_seq2seq_model(
         raise Exception("Unknown TrainingSignal.")
 
     if use_cuda:
+        torch.cuda.empty_cache()
         model.cuda()
         if signal == TrainSignal.SUPERVISED:
             loss_criterion.cuda()
@@ -372,22 +373,22 @@ def train_seq2seq_model(
 
         logging.info("Done with epoch %d." % epoch_idx)
 
-        if (epoch_idx+1) % val_frequency == 0 or (epoch_idx+1) == nb_epochs:
-            # Evaluate the model on the validation set
-            out_path = str(result_dir / ("eval/epoch_%d/val_.txt" % epoch_idx))
-            val_acc = evaluate_model(str(path_to_weight_dump), vocab_file,
-                                     val_file, 5, 0, use_grammar,
-                                     out_path, 100, 50, batch_size,
-                                     use_cuda, False)
-            logging.info("Epoch : %d ValidationAccuracy : %f." % (epoch_idx, val_acc))
-            if val_acc > best_val_acc:
-                logging.info("Epoch : %d ValidationBest : %f." % (epoch_idx, val_acc))
-                best_val_acc = val_acc
-                path_to_weight_dump = models_dir / "best.model"
-                with open(str(path_to_weight_dump), "wb") as weight_file:
-                    # Needs to be in cpu mode to dump, otherwise will be annoying to load
-                    if use_cuda:
-                        model.cpu()
-                    torch.save(model, weight_file)
-                    if use_cuda:
-                        model.cuda()
+        # if (epoch_idx+1) % val_frequency == 0 or (epoch_idx+1) == nb_epochs:
+        #     # Evaluate the model on the validation set
+        #     out_path = str(result_dir / ("eval/epoch_%d/val_.txt" % epoch_idx))
+        #     val_acc = evaluate_model(str(path_to_weight_dump), vocab_file,
+        #                              val_file, 5, 0, use_grammar,
+        #                              out_path, 100, 50, batch_size,
+        #                              use_cuda, False)
+        #     logging.info("Epoch : %d ValidationAccuracy : %f." % (epoch_idx, val_acc))
+        #     if val_acc > best_val_acc:
+        #         logging.info("Epoch : %d ValidationBest : %f." % (epoch_idx, val_acc))
+        #         best_val_acc = val_acc
+        #         path_to_weight_dump = models_dir / "best.model"
+        #         with open(str(path_to_weight_dump), "wb") as weight_file:
+        #             # Needs to be in cpu mode to dump, otherwise will be annoying to load
+        #             if use_cuda:
+        #                 model.cpu()
+        #             torch.save(model, weight_file)
+        #             if use_cuda:
+        #                 model.cuda()
