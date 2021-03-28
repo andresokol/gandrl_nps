@@ -297,10 +297,18 @@ class MultiIOProgramDecoder(nn.Module):
         # We will make it a batch size of beam_size
         batch_state = None  # First one is the learned default state
         batch_grammar_state = None
-        batch_inputs = Variable(tt.LongTensor(batch_size, 1).fill_(tgt_start), volatile=vol)
+        if vol:
+            with torch.no_grad():
+                batch_inputs = Variable(tt.LongTensor(batch_size, 1).fill_(tgt_start))
+        else:
+            batch_inputs = Variable(tt.LongTensor(batch_size, 1).fill_(tgt_start))
         batch_list_inputs = [[tgt_start]]*batch_size
         batch_io_embeddings = io_embeddings
-        batch_idx = Variable(torch.arange(0, batch_size, 1).long(), volatile=vol)
+        if vol:
+            with torch.no_grad():
+                batch_idx = Variable(torch.arange(0, batch_size, 1).long())
+        else:
+            batch_idx = Variable(torch.arange(0, batch_size, 1).long())
         if use_cuda:
             batch_idx = batch_idx.cuda()
         beams_per_sp = [1 for _ in range(batch_size)]
@@ -356,8 +364,12 @@ class MultiIOProgramDecoder(nn.Module):
                 if self.syntax_checker is not None:
                     for idx in sp_parent_idxs.data:
                         new_batch_checker.append(copy.copy(batch_grammar_state[idx]))
-                sp_next_batch_idxs = Variable(tt.LongTensor(sp_curr_beam_size).fill_(i),
-                                              volatile=vol)
+                
+                if vol:
+                    with torch.no_grad():
+                        sp_next_batch_idxs = Variable(tt.LongTensor(sp_curr_beam_size).fill_(i))
+                else:
+                    sp_next_batch_idxs = Variable(tt.LongTensor(sp_curr_beam_size).fill_(i))
                 # Get the idxs of the batches
                 if use_cuda:
                     sp_batch_inputs = sp_batch_inputs.cuda()
@@ -431,7 +443,11 @@ class MultiIOProgramDecoder(nn.Module):
         # of the outputs
 
         # Initial proba for what is certainly sampled
-        full_proba = Variable(tt.FloatTensor([1]), requires_grad=False, volatile=vol)
+        if vol:
+            with torch.no_grad():
+                full_proba = Variable(tt.FloatTensor([1]), requires_grad=False)
+        else:
+            full_proba = Variable(tt.FloatTensor([1]), requires_grad=False)
         rolls = [Rolls(-1, full_proba, nb_samples, -1) for _ in range(batch_size)]
 
         sm = nn.Softmax(dim=1)
@@ -439,7 +455,11 @@ class MultiIOProgramDecoder(nn.Module):
         ## Initialising the elements for the decoder
         curr_batch_size = batch_size  # Will vary as we go along in the decoder
 
-        batch_inputs = Variable(tt.LongTensor(batch_size, 1).fill_(tgt_start), volatile=vol)
+        if vol:
+            with torch.no_grad():
+                batch_inputs = Variable(tt.LongTensor(batch_size, 1).fill_(tgt_start))
+        else:
+            batch_inputs = Variable(tt.LongTensor(batch_size, 1).fill_(tgt_start))
         batch_list_inputs = [[tgt_start]]*batch_size
         # batch_inputs: (curr_batch, ) -> inputs for the decoder step
         batch_state = None  # First one is the learned default state
@@ -556,16 +576,24 @@ class MultiIOProgramDecoder(nn.Module):
                 break
             # Extract the ones we need to continue
             next_batch_inputs = [inp for inp in next_input if inp != tgt_end]
-            batch_inputs = Variable(tt.LongTensor(next_batch_inputs).view(-1, 1),
-                                    requires_grad=False, volatile=vol)
+            if vol:
+                with torch.no_grad():
+                    batch_inputs = Variable(tt.LongTensor(next_batch_inputs).view(-1, 1),
+                                            requires_grad=False)
+            else:
+                batch_inputs = Variable(tt.LongTensor(next_batch_inputs).view(-1, 1),
+                                        requires_grad=False)
             batch_list_inputs = [[inp] for inp in next_batch_inputs]
             # Which are the parents that we need to get the state for
             # (potentially multiple times the same parent)
             parents_to_continue = [parent_idx for (parent_idx, to_cont)
                                    in zip(parent, to_continue_mask) if to_cont]
-            parent = Variable(tt.LongTensor(parents_to_continue), requires_grad=False,
-                              volatile=vol)
 
+            if vol:
+                with torch.no_grad():
+                    parent = Variable(tt.LongTensor(parents_to_continue), requires_grad=False)
+            else:
+                parent = Variable(tt.LongTensor(parents_to_continue), requires_grad=False)
 
             ## Gather the output for the next step of the decoder
             # parent: curr_batch_size
@@ -607,7 +635,7 @@ class ResBlock(nn.Module):
         super(ResBlock, self).__init__()
         self.feat_size = in_feats
         self.kernel_size = kernel_size
-        self.padding = (kernel_size - 1) / 2
+        self.padding = (kernel_size - 1) // 2
 
         self.conv1 = nn.Conv2d(self.feat_size, self.feat_size,
                                kernel_size=self.kernel_size,
@@ -651,7 +679,7 @@ class GridEncoder(nn.Module):
                 block = nn.Sequential(
                     ResBlock(kernel_size, conv_stack[i-1]),
                     nn.Conv2d(conv_stack[i-1], conv_stack[i],
-                              kernel_size=kernel_size, padding=(kernel_size-1)/2 ),
+                              kernel_size=kernel_size, padding=(kernel_size-1)//2 ),
                     nn.ReLU(inplace=True)
                 )
             else:
@@ -697,18 +725,18 @@ class IOsEncoder(nn.Module):
         ## Do one layer of convolution before stacking
 
         # Deduce the size of the embedding for each grid
-        initial_dim = conv_stack[0] / 2  # Because we are going to get dim from I and dim from O
+        initial_dim = conv_stack[0] // 2  # Because we are going to get dim from I and dim from O
 
         # TODO: we know that our grids are mostly sparse, and only positive.
         # That means that a different initialisation might be more appropriate.
         self.in_grid_enc = MapModule(nn.Sequential(
             nn.Conv2d(IMG_SIZE[0], initial_dim,
-                      kernel_size=kernel_size, padding=(kernel_size -1)/2),
+                      kernel_size=kernel_size, padding=(kernel_size -1)//2),
             nn.ReLU(inplace=True)
         ), 3)
         self.out_grid_enc = MapModule(nn.Sequential(
             nn.Conv2d(IMG_SIZE[0], initial_dim,
-                      kernel_size=kernel_size, padding=(kernel_size -1)/2),
+                      kernel_size=kernel_size, padding=(kernel_size -1)//2),
             nn.ReLU(inplace=True)
         ), 3)
 

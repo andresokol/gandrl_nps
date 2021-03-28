@@ -230,7 +230,7 @@ class AstConverter(object):
             tokens.append(x+'(')
             tokens.append(x+')')
 
-        for i in xrange(20):
+        for i in range(20):
             tokens.append('R={0}'.format(i))
 
         return tokens

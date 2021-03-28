@@ -27,7 +27,7 @@ def do_supervised_minibatch(model,
     loss.backward()
 
     # Return the value of the loss over the minibatch for monitoring
-    return loss.data[0]
+    return loss.item()
 
 def do_syntax_weighted_minibatch(model,
                                  # Source
@@ -62,7 +62,7 @@ def do_syntax_weighted_minibatch(model,
     loss.backward()
 
     # Return the value of the loss over the minibatch for monitoring
-    return loss.data[0]
+    return loss.item()
 
 def do_rl_minibatch(model,
                     # Source
@@ -204,8 +204,9 @@ def do_beam_rl(model,
     batch_reward = 0
     use_cuda = inp_grids.is_cuda
     tt = torch.cuda if use_cuda else torch
-    vol_inp_grids = Variable(inp_grids.data, volatile=True)
-    vol_out_grids = Variable(out_grids.data, volatile=True)
+    with torch.no_grad():
+        vol_inp_grids = Variable(inp_grids.data)
+        vol_out_grids = Variable(out_grids.data)
     # Get the programs from the beam search
     decoded = model.beam_sample(vol_inp_grids, vol_out_grids,
                                 tgt_start_idx, tgt_end_idx, max_len,

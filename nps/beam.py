@@ -70,10 +70,12 @@ class Beam(object):
         self.parent_beam_idxs = None
 
     def get_next_input(self):
-        return Variable(self.next_beam_input, volatile=True), self.next_beam_input_list
+        with torch.no_grad():
+            return Variable(self.next_beam_input), self.next_beam_input_list
 
     def get_parent_beams(self):
-        return Variable(self.parent_beam_idxs, volatile=True)
+        with torch.no_grad():
+            return Variable(self.parent_beam_idxs)
 
     def advance(self, wordLprobas):
         '''

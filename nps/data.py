@@ -95,7 +95,7 @@ def shuffle_dataset(dataset, batch_size, randomize=True):
     bucket_fun = lambda x: len(x[1]) / 5
     pairs.sort(key=bucket_fun, reverse=True)
     grouped_pairs = [pairs[pos: pos + batch_size]
-                     for pos in xrange(0,len(pairs), batch_size)]
+                     for pos in range(0,len(pairs), batch_size)]
     if randomize:
         to_shuffle = grouped_pairs[:-1]
         random.shuffle(to_shuffle)
@@ -136,6 +136,10 @@ def get_minibatch(dataset, sp_idx, batch_size,
         sample_out_worlds = []
         sample_test_inp_worlds = []
         sample_test_out_worlds = []
+
+        if len(sample[0]) != 2:
+            sample = [s[:2] for s in sample]
+
         for inp_grid_desc, out_grid_desc in sample[:nb_ios]:
 
             # Do the inp_grid
@@ -163,8 +167,14 @@ def get_minibatch(dataset, sp_idx, batch_size,
         out_worlds.append(sample_out_worlds)
         inp_test_worlds.append(sample_test_inp_worlds)
         out_test_worlds.append(sample_test_out_worlds)
-    inp_grids = Variable(torch.stack(inp_grids, 0), volatile=volatile_vars)
-    out_grids = Variable(torch.stack(out_grids, 0), volatile=volatile_vars)
+    
+    if volatile_vars:
+        with torch.no_grad():
+            inp_grids = Variable(torch.stack(inp_grids, 0))
+            out_grids = Variable(torch.stack(out_grids, 0))
+    else:
+        inp_grids = Variable(torch.stack(inp_grids, 0))
+        out_grids = Variable(torch.stack(out_grids, 0))
 
     # Prepare the target sequences
     targets = dataset["targets"][sp_idx:sp_idx+batch_size]
@@ -186,8 +196,14 @@ def get_minibatch(dataset, sp_idx, batch_size,
         line[1:] + [pad_idx] * (max_len - len(line)) for line in lines
     ]
 
-    in_tgt_seq = Variable(torch.LongTensor(input_lines), volatile=volatile_vars)
-    out_tgt_seq = Variable(torch.LongTensor(output_lines), volatile=volatile_vars)
+    if volatile_vars:
+        with torch.no_grad():
+            in_tgt_seq = Variable(torch.LongTensor(input_lines))
+            out_tgt_seq = Variable(torch.LongTensor(output_lines))
+    else:
+        in_tgt_seq = Variable(torch.LongTensor(input_lines) )
+        out_tgt_seq = Variable(torch.LongTensor(output_lines))
+
 
     return inp_grids, out_grids, in_tgt_seq, input_lines, out_tgt_seq, \
         inp_worlds, out_worlds, targets, inp_test_worlds, out_test_worlds

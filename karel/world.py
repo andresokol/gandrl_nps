@@ -171,7 +171,7 @@ class World:
         markers = []
         blocked = []
         hero = []
-        for r in xrange(self.rows-1, -1, -1):
+        for r in range(self.rows-1, -1, -1):
             for c in range(0, self.cols):
                 if self.blocked[r][c] == 1:
                     blocked.append("{0}:{1}".format(r, c))
@@ -292,7 +292,7 @@ class World:
         # Get the position of the markers
         markers = np.zeros((rows, cols))
         for nb_marker_m1, marker_map in enumerate(tensor[6:,1:rows+1, 1:cols+1]):
-            markers += (nb_marker_m1+1) * marker_map
+            markers += (nb_marker_m1+1) * marker_map.numpy()
 
         return cls(rows, cols, heroRow, heroCol, heroDir, blocked, markers)
 
